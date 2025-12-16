@@ -68,7 +68,7 @@ class Snake {
         }
         return false;
     }
-}
+}// as
 
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = Snake;
