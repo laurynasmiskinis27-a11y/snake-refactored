@@ -2,85 +2,76 @@ class InputHandler {
     constructor(game) {
         this.game = game;
         this.keys = {};
-        this.lastActionTime = 0;
-        this.debounceDelay = 100;
         this.setupEventListeners();
     }
 
     setupEventListeners() {
-        if (typeof window !== 'undefined' && window.addEventListener) {
-            const keyDownHandler = (e) => {
-                const key = e.key;
-                this.keys[key] = true;
+        if (typeof window === 'undefined') return;
 
-                const now = Date.now();
-                if (now - this.lastActionTime > this.debounceDelay) {
-                    this.handleKeyPress(key);
-                    this.lastActionTime = now;
-                }
-            };
+        this.keyDownHandler = (e) => {
+            const key = e.key;
+            this.keys[key] = true;
+            this.handleKeyPress(key);
+        };
 
-            const keyUpHandler = (e) => {
-                this.keys[e.key] = false;
-            };
+        this.keyUpHandler = (e) => {
+            this.keys[e.key] = false;
+        };
 
-            window.addEventListener('keydown', keyDownHandler);
-            window.addEventListener('keyup', keyUpHandler);
-
-            this._handlers = { keyDownHandler, keyUpHandler };
-        }
+        window.addEventListener('keydown', this.keyDownHandler);
+        window.addEventListener('keyup', this.keyUpHandler);
     }
 
     handleKeyPress(key) {
-        let direction = null;
-
-        if (key === 'ArrowUp' || key === 'w' || key === 'W' || key === '8') {
-            direction = 'up';
-        } else if (key === 'ArrowDown' || key === 's' || key === 'S' || key === '2') {
-            direction = 'down';
-        } else if (key === 'ArrowLeft' || key === 'a' || key === 'A' || key === '4') {
-            direction = 'left';
-        } else if (key === 'ArrowRight' || key === 'd' || key === 'D' || key === '6') {
-            direction = 'right';
-        }
-
-        if (direction) {
-            if (this.game && this.game.snake && typeof this.game.snake.changeDirection === 'function') {
-                this.game.snake.changeDirection(direction);
-            }
-        } else {
-            if (key === ' ') {
-                if (this.game) {
-                    if (!this.game.gameRunning) {
-                        if (typeof this.game.start === 'function') {
-                            this.game.start();
-                        }
-                    } else {
-                        if (typeof this.game.stop === 'function') {
-                            this.game.stop();
-                        }
-                    }
+        switch (key) {
+            case 'ArrowUp':
+            case 'w':
+            case 'W':
+                this.game.snake.changeDirection('up');
+                break;
+            case 'ArrowDown':
+            case 's':
+            case 'S':
+                this.game.snake.changeDirection('down');
+                break;
+            case 'ArrowLeft':
+            case 'a':
+            case 'A':
+                this.game.snake.changeDirection('left');
+                break;
+            case 'ArrowRight':
+            case 'd':
+            case 'D':
+                this.game.snake.changeDirection('right');
+                break;
+            case ' ':
+                if (this.game.gameRunning) {
+                    this.game.stop();
+                } else {
+                    this.game.start();
                 }
-            } else if (key === 'r' || key === 'R' || key === 'Escape') {
-                if (this.game && typeof this.game.reset === 'function') {
-                    this.game.reset();
-                }
-            }
+                break;
+            case 'r':
+            case 'R':
+                this.game.reset();
+                break;
         }
     }
 
     isKeyPressed(key) {
-        // Defensive: ensure key is string
-        if (typeof key !== 'string') return false;
         return this.keys[key] === true;
     }
 
     destroy() {
+        if (typeof window !== 'undefined') {
+            window.removeEventListener('keydown', this.keyDownHandler);
+            window.removeEventListener('keyup', this.keyUpHandler);
+        }
         this.keys = {};
-        this.lastActionTime = 0;
     }
 }
 
+// Export for Node.js and browser
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = InputHandler;
 } else {
